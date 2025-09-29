@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useEffect, useState } from 'react';
 import { getPeople } from '../api';
 import { Person } from '../types';
@@ -19,6 +19,28 @@ export const PeoplePage = () => {
   const centuries = searchParams.getAll('centuries');
   const sort = (searchParams.get('sort') as keyof Person) || '';
   const order = searchParams.has('order');
+
+  const sortPeople = useCallback(
+    (a: Person, b: Person) => {
+      if (!sort) {
+        return 0;
+      }
+
+      const aVal = a[sort];
+      const bVal = b[sort];
+
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return aVal.localeCompare(bVal);
+      }
+
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return aVal - bVal;
+      }
+
+      return 0;
+    },
+    [sort],
+  );
 
   const filteredAndSortPeoples = useMemo(() => {
     const normalizedQuery = query.toLowerCase();
@@ -45,22 +67,7 @@ export const PeoplePage = () => {
     });
 
     const sortFilteredPeoples = sort
-      ? filteredPeoples.sort((a, b) => {
-          if (sort) {
-            const aVal = a[sort];
-            const bVal = b[sort];
-
-            if (typeof aVal === 'string' && typeof bVal === 'string') {
-              return aVal.localeCompare(bVal);
-            }
-
-            if (typeof aVal === 'number' && typeof bVal === 'number') {
-              return aVal - bVal;
-            }
-          }
-
-          return 0;
-        })
+      ? filteredPeoples.sort((a, b) => sortPeople(a, b))
       : filteredPeoples;
 
     return order ? sortFilteredPeoples.reverse() : sortFilteredPeoples;
