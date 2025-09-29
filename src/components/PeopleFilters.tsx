@@ -3,16 +3,13 @@ import { getSearchWith } from '../utils/searchHelper';
 import { Link, useSearchParams } from 'react-router-dom';
 import classNames from 'classnames';
 
-interface Props {
-  query: string;
-  centuries: string[];
-  sex: '' | 'm' | 'f';
-}
-
-export const PeopleFilters: React.FC<Props> = ({ query, centuries, sex }) => {
+export const PeopleFilters = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('query') || '';
+  const sex = (searchParams.get('sex') as '' | 'm' | 'f') || '';
+  const centuries = searchParams.getAll('centuries');
 
-  const setSearchWith = (params: any) => {
+  const setSearchWith = (params: Record<string, string | null>) => {
     const search = getSearchWith(searchParams, params);
 
     setSearchParams(search);

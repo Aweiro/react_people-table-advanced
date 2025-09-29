@@ -15,22 +15,21 @@ export const PeoplePage = () => {
   const [error, setError] = useState(false);
 
   const query = searchParams.get('query') || '';
-  const sex = searchParams.get('sex') || '';
-  const sort = (searchParams.get('sort') as keyof Person) || '';
+  const sex = searchParams.get('sex' as '' | 'm' | 'f') || '';
   const centuries = searchParams.getAll('centuries');
+  const sort = (searchParams.get('sort') as keyof Person) || '';
+  const order = searchParams.has('order')
 
   const filteredAndSortPeoples = useMemo(() => {
     const normalizedQuery = query.toLowerCase();
 
     const filteredPeoples = peoples.filter(people => {
+      const normalizedBorn = Math.ceil(people.born / 100);
+
       const isCenturie =
-        centuries.length > 0
-          ? centuries.some(
-              centurie =>
-                +centurie >= Math.ceil(people.born / 100) &&
-                +centurie - 1 < Math.ceil(people.born / 100),
-            )
-          : true;
+        centuries.length === 0
+          ? true
+          : centuries.some(centurie => normalizedBorn === +centurie);
 
       if (
         (people.name.toLowerCase().includes(normalizedQuery) ||
@@ -58,13 +57,14 @@ export const PeoplePage = () => {
           return aVal - bVal;
         }
       }
+
       return 0;
     });
 
     return searchParams.has('order')
       ? sortFilteredPeoples.reverse()
       : sortFilteredPeoples;
-  }, [centuries, peoples, query, sex]);
+  }, [centuries, peoples, query, sex, sort, order]);
 
   useEffect(() => {
     setLoading(true);
@@ -82,13 +82,7 @@ export const PeoplePage = () => {
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
           <div className="column is-7-tablet is-narrow-desktop">
-            {!loading && (
-              <PeopleFilters
-                query={query}
-                centuries={centuries}
-                sex={sex as 'm' | 'f' | ''}
-              />
-            )}
+            {!loading && !error && <PeopleFilters />}
           </div>
 
           <div className="column">
@@ -104,7 +98,7 @@ export const PeoplePage = () => {
                   There are no people on the server
                 </p>
               ) : (
-                <PeopleTable peoples={filteredAndSortPeoples} sort={sort} />
+                <PeopleTable peoples={filteredAndSortPeoples} />
               )}
             </div>
           </div>
