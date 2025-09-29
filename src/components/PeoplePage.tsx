@@ -1,8 +1,80 @@
-import { PeopleFilters } from './PeopleFilters';
-import { Loader } from './Loader';
+import React, { useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { getPeople } from '../api';
+import { Person } from '../types';
 import { PeopleTable } from './PeopleTable';
+import { Loader } from './Loader';
+import { PeopleFilters } from './PeopleFilters';
+import { useSearchParams } from 'react-router-dom';
 
 export const PeoplePage = () => {
+  const [searchParams] = useSearchParams();
+
+  const [peoples, setPeoples] = useState<Person[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const query = searchParams.get('query') || '';
+  const sex = searchParams.get('sex') || '';
+  const sort = (searchParams.get('sort') as keyof Person) || '';
+  const centuries = searchParams.getAll('centuries');
+
+  const filteredAndSortPeoples = useMemo(() => {
+    const normalizedQuery = query.toLowerCase();
+
+    const filteredPeoples = peoples.filter(people => {
+      const isCenturie =
+        centuries.length > 0
+          ? centuries.some(
+              centurie =>
+                +centurie >= Math.ceil(people.born / 100) &&
+                +centurie - 1 < Math.ceil(people.born / 100),
+            )
+          : true;
+
+      if (
+        (people.name.toLowerCase().includes(normalizedQuery) ||
+          people.motherName?.toLowerCase().includes(normalizedQuery) ||
+          people.fatherName?.toLowerCase().includes(normalizedQuery)) &&
+        isCenturie &&
+        (people.sex === sex || !sex)
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+
+    const sortFilteredPeoples = filteredPeoples.sort((a, b) => {
+      if (sort) {
+        const aVal = a[sort];
+        const bVal = b[sort];
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return aVal.localeCompare(bVal);
+        }
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return aVal - bVal;
+        }
+      }
+      return 0;
+    });
+
+    return searchParams.has('order')
+      ? sortFilteredPeoples.reverse()
+      : sortFilteredPeoples;
+  }, [centuries, peoples, query, sex]);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+    getPeople()
+      .then(arr => setPeoples(arr))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <>
       <h1 className="title">People Page</h1>
@@ -10,20 +82,30 @@ export const PeoplePage = () => {
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
           <div className="column is-7-tablet is-narrow-desktop">
-            <PeopleFilters />
+            {!loading && (
+              <PeopleFilters
+                query={query}
+                centuries={centuries}
+                sex={sex as 'm' | 'f' | ''}
+              />
+            )}
           </div>
 
           <div className="column">
             <div className="box table-container">
-              <Loader />
-
-              <p data-cy="peopleLoadingError">Something went wrong</p>
-
-              <p data-cy="noPeopleMessage">There are no people on the server</p>
-
-              <p>There are no people matching the current search criteria</p>
-
-              <PeopleTable />
+              {loading ? (
+                <Loader />
+              ) : error ? (
+                <p data-cy="peopleLoadingError" className="has-text-danger">
+                  Something went wrong
+                </p>
+              ) : peoples.length === 0 ? (
+                <p data-cy="noPeopleMessage">
+                  There are no people on the server
+                </p>
+              ) : (
+                <PeopleTable peoples={filteredAndSortPeoples} sort={sort} />
+              )}
             </div>
           </div>
         </div>
