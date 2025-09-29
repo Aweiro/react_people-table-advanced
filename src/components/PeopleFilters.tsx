@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { getSearchWith } from '../utils/searchHelper';
+import { getSearchWith, SearchParams } from '../utils/searchHelper';
 import { Link, useSearchParams } from 'react-router-dom';
 import classNames from 'classnames';
 
@@ -9,7 +9,7 @@ export const PeopleFilters = () => {
   const sex = (searchParams.get('sex') as '' | 'm' | 'f') || '';
   const centuries = searchParams.getAll('centuries');
 
-  const setSearchWith = (params: Record<string, string | null>) => {
+  const setSearchWith = (params: SearchParams) => {
     const search = getSearchWith(searchParams, params);
 
     setSearchParams(search);

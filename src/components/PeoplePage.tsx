@@ -15,10 +15,10 @@ export const PeoplePage = () => {
   const [error, setError] = useState(false);
 
   const query = searchParams.get('query') || '';
-  const sex = searchParams.get('sex' as '' | 'm' | 'f') || '';
+  const sex = searchParams.get('sex') || '';
   const centuries = searchParams.getAll('centuries');
   const sort = (searchParams.get('sort') as keyof Person) || '';
-  const order = searchParams.has('order')
+  const order = searchParams.has('order');
 
   const filteredAndSortPeoples = useMemo(() => {
     const normalizedQuery = query.toLowerCase();
@@ -44,26 +44,26 @@ export const PeoplePage = () => {
       return false;
     });
 
-    const sortFilteredPeoples = filteredPeoples.sort((a, b) => {
-      if (sort) {
-        const aVal = a[sort];
-        const bVal = b[sort];
+    const sortFilteredPeoples = sort
+      ? filteredPeoples.sort((a, b) => {
+          if (sort) {
+            const aVal = a[sort];
+            const bVal = b[sort];
 
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return aVal.localeCompare(bVal);
-        }
+            if (typeof aVal === 'string' && typeof bVal === 'string') {
+              return aVal.localeCompare(bVal);
+            }
 
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return aVal - bVal;
-        }
-      }
+            if (typeof aVal === 'number' && typeof bVal === 'number') {
+              return aVal - bVal;
+            }
+          }
 
-      return 0;
-    });
+          return 0;
+        })
+      : filteredPeoples;
 
-    return searchParams.has('order')
-      ? sortFilteredPeoples.reverse()
-      : sortFilteredPeoples;
+    return order ? sortFilteredPeoples.reverse() : sortFilteredPeoples;
   }, [centuries, peoples, query, sex, sort, order]);
 
   useEffect(() => {

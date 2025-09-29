@@ -5,10 +5,13 @@ import React from 'react';
 import { getSearchWith } from '../utils/searchHelper';
 import classNames from 'classnames';
 
+type SortOrdersType = 'Name' | 'Sex' | 'Born' | 'Died';
+
 export const PeopleTable = ({ peoples }: { peoples: Person[] }) => {
   const [searchParams] = useSearchParams();
   const sort = (searchParams.get('sort') as keyof Person) || '';
   const isDesc = searchParams.has('order');
+  const sortOrders: SortOrdersType[] = ['Name', 'Sex', 'Born', 'Died'];
 
   return (
     <table
@@ -17,7 +20,7 @@ export const PeopleTable = ({ peoples }: { peoples: Person[] }) => {
     >
       <thead>
         <tr>
-          {['Name', 'Sex', 'Born', 'Died'].map(key => {
+          {sortOrders.map(key => {
             const keyToParam = key.toLocaleLowerCase();
 
             return (
