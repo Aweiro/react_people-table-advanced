@@ -73,13 +73,21 @@ export const PeoplePage = () => {
     return order ? sortFilteredPeoples.reverse() : sortFilteredPeoples;
   }, [centuries, peoples, query, sex, sort, order]);
 
-  useEffect(() => {
+  async function uploadPeoples() {
     setLoading(true);
     setError(false);
-    getPeople()
-      .then(arr => setPeoples(arr))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    try {
+      const responsedPeoples = await getPeople();
+      setPeoples(responsedPeoples);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    uploadPeoples()
   }, []);
 
   return (

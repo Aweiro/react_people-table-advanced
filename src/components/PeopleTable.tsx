@@ -1,9 +1,9 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Person } from '../types';
 import { PersonLink } from './PersonLink';
 import React from 'react';
-import { getSearchWith } from '../utils/searchHelper';
 import classNames from 'classnames';
+import { SearchLink } from './SearchLink';
 
 type SortOrdersType = 'Name' | 'Sex' | 'Born' | 'Died';
 
@@ -22,24 +22,19 @@ export const PeopleTable = ({ peoples }: { peoples: Person[] }) => {
         <tr>
           {sortOrders.map(key => {
             const keyToParam = key.toLocaleLowerCase();
+            const sotrParams = {
+              sort: isDesc && sort === keyToParam ? null : keyToParam,
+              order:
+                (isDesc && sort === keyToParam) || !sort || sort !== keyToParam
+                  ? null
+                  : 'desc',
+            };
 
             return (
               <th key={key}>
                 <span className="is-flex is-flex-wrap-nowrap">
                   {key}
-                  <Link
-                    to={{
-                      search: getSearchWith(searchParams, {
-                        sort: isDesc && sort === keyToParam ? null : keyToParam,
-                        order:
-                          (isDesc && sort === keyToParam) ||
-                          !sort ||
-                          sort !== keyToParam
-                            ? null
-                            : 'desc',
-                      }),
-                    }}
-                  >
+                  <SearchLink params={sotrParams}>
                     <span className="icon">
                       <i
                         className={classNames(
@@ -57,7 +52,7 @@ export const PeopleTable = ({ peoples }: { peoples: Person[] }) => {
                         )}
                       />
                     </span>
-                  </Link>
+                  </SearchLink>
                 </span>
               </th>
             );
